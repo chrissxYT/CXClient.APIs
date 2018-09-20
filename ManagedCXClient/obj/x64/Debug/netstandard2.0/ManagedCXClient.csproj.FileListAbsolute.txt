@@ -1,0 +1,9 @@
+D:\workspace_VS\CXClient.APIs\ManagedCXClient\bin\x64\Debug\netstandard2.0\ManagedCXClient.deps.json
+D:\workspace_VS\CXClient.APIs\ManagedCXClient\bin\x64\Debug\netstandard2.0\ManagedCXClient.dll
+D:\workspace_VS\CXClient.APIs\ManagedCXClient\bin\x64\Debug\netstandard2.0\ManagedCXClient.pdb
+D:\workspace_VS\CXClient.APIs\ManagedCXClient\obj\x64\Debug\netstandard2.0\ManagedCXClient.csprojAssemblyReference.cache
+D:\workspace_VS\CXClient.APIs\ManagedCXClient\obj\x64\Debug\netstandard2.0\ManagedCXClient.csproj.CoreCompileInputs.cache
+D:\workspace_VS\CXClient.APIs\ManagedCXClient\obj\x64\Debug\netstandard2.0\ManagedCXClient.AssemblyInfoInputs.cache
+D:\workspace_VS\CXClient.APIs\ManagedCXClient\obj\x64\Debug\netstandard2.0\ManagedCXClient.AssemblyInfo.cs
+D:\workspace_VS\CXClient.APIs\ManagedCXClient\obj\x64\Debug\netstandard2.0\ManagedCXClient.dll
+D:\workspace_VS\CXClient.APIs\ManagedCXClient\obj\x64\Debug\netstandard2.0\ManagedCXClient.pdb
