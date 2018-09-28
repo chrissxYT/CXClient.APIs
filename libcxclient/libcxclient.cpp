@@ -1,39 +1,30 @@
 #include "libcxclient.h"
 
-typedef int8_t i8;
-typedef uint8_t u8;
-typedef int16_t i16;
-typedef uint16_t u16;
-typedef int32_t i32;
-typedef uint32_t u32;
-typedef int64_t i64;
-typedef uint64_t u64;
-
-i16 std::int16(u8 b[2])
+int16_t std::int16(uint8_t b[2])
 {
 	return (b[0] << 8) | (b[1]);
 }
-u16 std::uint16(u8 b[2])
+uint16_t std::uint16(uint8_t b[2])
 {
 	return (b[0] << 8) | b[1];
 }
-i32 std::int32(u8 b[4])
+int32_t std::int32(uint8_t b[4])
 {
 	return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | (b[3]);
 }
-u32 std::uint32(u8 b[4])
+uint32_t std::uint32(uint8_t b[4])
 {
 	return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | (b[3]);
 }
-i64 std::int64(u8 b[8])
+int64_t std::int64(uint8_t b[8])
 {
-	return ((i64)b[0] << 56) | ((i64)b[1] << 48) | ((i64)b[2] << 40) |
-		((i64)b[3] << 32) | (b[4] << 24) | (b[5] << 16) | (b[6] << 8) | (b[7]);
+	return ((int64_t)b[0] << 56) | ((int64_t)b[1] << 48) | ((int64_t)b[2] << 40) |
+		((int64_t)b[3] << 32) | (b[4] << 24) | (b[5] << 16) | (b[6] << 8) | (b[7]);
 }
-u64 std::uint64(u8 b[8])
+uint64_t std::uint64(uint8_t b[8])
 {
-	return ((u64)b[0] << 56) | ((u64)b[1] << 48) | ((u64)b[2] << 40) |
-		((u64)b[3] << 32) | (b[4] << 24) | (b[5] << 16) | (b[6] << 8) | (b[7]);
+	return ((uint64_t)b[0] << 56) | ((uint64_t)b[1] << 48) | ((uint64_t)b[2] << 40) |
+		((uint64_t)b[3] << 32) | (b[4] << 24) | (b[5] << 16) | (b[6] << 8) | (b[7]);
 }
 
 eapi_mod::eapi_mod() {}
@@ -90,14 +81,12 @@ vector<uint8_t*> split(uint8_t *arr, streampos len, uint8_t separator)
 	return a;
 }
 
-
-
 map<char*, uint8_t*> *read_values(path &mod_dir)
 {
 	map<char*, uint8_t*> *values = new map<char*, uint8_t*>;
 	for (path p : directory_iterator(mod_dir))
 	{
-		ifstream s(p.string().c_str(), ios::binary);
+		ifstream s(p.string(), ios::binary);
 		streampos b = s.tellg();
 		s.seekg(ios::end);
 		streampos e = s.tellg();
@@ -111,7 +100,7 @@ map<char*, uint8_t*> *read_values(path &mod_dir)
 	return values;
 }
 
-vector<eapi_mod*> read_mods(char *enabled_file)
+vector<eapi_mod*> read_mods(string &enabled_file)
 {
 	vector<eapi_mod*> mods;
 	ifstream s(enabled_file, ios::binary);
@@ -164,7 +153,7 @@ eapi_info eapi::parse_eapi()
 	string enabled_file = string(mods_root).append("/enabled");
 	string running_file = string(eapi_root).append("/running");
 	eapi_info info(fexists(running_file));
-	info.mods = read_mods((char*)enabled_file.c_str());
+	info.mods = read_mods(enabled_file);
 	return info;
 }
 
