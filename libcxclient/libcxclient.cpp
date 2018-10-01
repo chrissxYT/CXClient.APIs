@@ -29,7 +29,7 @@ uint64_t std::uint64(uint8_t b[8])
 
 eapi_mod::eapi_mod() {}
 
-eapi_mod::eapi_mod(char *name, bool_t enabled, map<char*, uint8_t*> *values)
+eapi_mod::eapi_mod(char *name, bool enabled, map<char*, uint8_t*> *values)
 {
 	this->name = name;
 	this->enabled = enabled;
@@ -49,9 +49,10 @@ eapi_mod::~eapi_mod()
 
 eapi_info::eapi_info() {}
 
-eapi_info::eapi_info(bool_t running)
+eapi_info::eapi_info(bool running, vector<eapi_mod*> mods)
 {
 	this->running = running;
+	this->mods = mods;
 }
 
 eapi_info::~eapi_info()
@@ -117,7 +118,7 @@ vector<eapi_mod*> read_mods(string &enabled_file)
 	for (uint8_t *v : splt)
 	{
 		size_t last_idx = sizeof(v) - 1;
-		bool_t enabled = v[last_idx];
+		bool enabled = v[last_idx];
 		v[last_idx] = 0;
 		eapi_mod *mod = new eapi_mod(malloc((char*)v), enabled, read_values(path(enabled_file).parent_path().append("/").append((char*)v)));
 		mods.push_back(mod);
@@ -126,7 +127,7 @@ vector<eapi_mod*> read_mods(string &enabled_file)
 	return mods;
 }
 
-bool_t std::fexists(string &file)
+bool std::fexists(string &file)
 {
 	return ifstream(file).good();
 }
@@ -152,20 +153,17 @@ eapi_info eapi::parse_eapi()
 	string mods_root = string(eapi_root).append("/mods");
 	string enabled_file = string(mods_root).append("/enabled");
 	string running_file = string(eapi_root).append("/running");
-	eapi_info info(fexists(running_file));
-	info.mods = read_mods(enabled_file);
-	return info;
+	return eapi_info(fexists(running_file), read_mods(enabled_file));
 }
 
 void cxclient::add_addon(string &path)
 {
-	fcopy(path, string(dot_minecraft_path).append("/cxclient_addons")
-		.append(dot_minecraft_path.substr(
-			max<size_t>(dot_minecraft_path.find_last_of('/'),
-				dot_minecraft_path.find_last_of('\\')))));
+	fcpy(path, string(dot_minecraft_path).append("/cxclient_addons")
+		.append(path.substr(max<size_t>(path.find_last_of('/'),
+			path.find_last_of('\\')))));
 }
 
-int std::fcopy(string &file1, string &file2)
+int std::fcpy(string &file1, string &file2)
 {
 	FILE *f1 = fopen(file1.c_str(), "r");
 	FILE *f2 = fopen(file2.c_str(), "w");
