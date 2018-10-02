@@ -29,27 +29,24 @@ uint64_t std::uint64(uint8_t b[8])
 
 eapi_mod::eapi_mod() {}
 
-eapi_mod::eapi_mod(char *name, bool enabled, map<char*, uint8_t*> *values)
+eapi_mod::eapi_mod(vector<uint8_t> &raw_name, bool enabled, map<string, uint8_t*> values)
 {
-	this->name = name;
+	this->name = string((char*)&raw_name[0]);
 	this->enabled = enabled;
 	this->values = values;
 }
 
 eapi_mod::~eapi_mod()
 {
-	for (pair<char*, uint8_t*> k : *values)
+	for (pair<string, uint8_t*> k : values)
 	{
-		free(k.first);
 		free(k.second);
 	}
-	free(name);
-	delete values;
 }
 
 eapi_info::eapi_info() {}
 
-eapi_info::eapi_info(bool running, vector<eapi_mod*> mods)
+eapi_info::eapi_info(bool running, vector<eapi_mod> mods)
 {
 	this->running = running;
 	this->mods = mods;
@@ -57,21 +54,21 @@ eapi_info::eapi_info(bool running, vector<eapi_mod*> mods)
 
 eapi_info::~eapi_info()
 {
-	for (eapi_mod *m : mods)
+	for (eapi_mod m : mods)
 	{
-		delete m;
+		m.~eapi_mod();
 	}
 }
 
-vector<uint8_t*> split(uint8_t *arr, streampos len, uint8_t separator)
+vector<vector<uint8_t>> split(uint8_t *arr, uint64_t len, uint8_t separator)
 {
-	vector<uint8_t*> a;
+	vector<vector<uint8_t>> a;
 	vector<uint8_t> b;
-	for (streampos i = 0; i < len; i += 1)
+	for (uint64_t i = 0; i < len; i++)
 	{
 		if (arr[i] == separator)
 		{
-			a.push_back(malloc(&b[0], b.size()));
+			a.push_back(b);
 			b = vector<uint8_t>();
 		}
 		else
@@ -82,47 +79,37 @@ vector<uint8_t*> split(uint8_t *arr, streampos len, uint8_t separator)
 	return a;
 }
 
-map<char*, uint8_t*> *read_values(path &mod_dir)
+map<string, uint8_t*> read_values(path &mod_dir)
 {
-	map<char*, uint8_t*> *values = new map<char*, uint8_t*>;
+	map<string, uint8_t*> values;
 	for (path p : directory_iterator(mod_dir))
 	{
-		ifstream s(p.string(), ios::binary);
-		streampos b = s.tellg();
-		s.seekg(ios::end);
-		streampos e = s.tellg();
-		s.seekg(ios::beg);
-		streampos l = e - b;
+		string str = p.string();
+		ifstream s(str, ios::binary);
+		streampos l = fsize(str);
 		uint8_t *bfr = (uint8_t*)malloc(l);
 		s.read((char*)bfr, l);
-		s.close();
-		values->operator[](malloc((char*)p.filename().string().c_str())) = bfr;
+		values[p.filename().string()] = bfr;
 	}
 	return values;
 }
 
-vector<eapi_mod*> read_mods(string &enabled_file)
+vector<eapi_mod> read_mods(string &enabled_file)
 {
-	vector<eapi_mod*> mods;
+	vector<eapi_mod> mods;
 	ifstream s(enabled_file, ios::binary);
-	streampos b = s.tellg();
-	s.seekg(ios::end);
-	streampos e = s.tellg();
-	s.seekg(ios::beg);
-	streampos len = e - b;
+	streampos len = fsize(enabled_file);
 	uint8_t *bytes = (uint8_t*)malloc(len);
 	s.read((char*)bytes, len);
-	s.close();
-	vector<uint8_t*> splt = split(bytes, len, 11);
+	vector<vector<uint8_t>> splt = split(bytes, len, 11);
 	free(bytes);
-	for (uint8_t *v : splt)
+	for (vector<uint8_t> v : splt)
 	{
-		size_t last_idx = sizeof(v) - 1;
+		size_t last_idx = v.size() - 1;
 		bool enabled = v[last_idx];
 		v[last_idx] = 0;
-		eapi_mod *mod = new eapi_mod(malloc((char*)v), enabled, read_values(path(enabled_file).parent_path().append("/").append((char*)v)));
-		mods.push_back(mod);
-		free(v);
+		mods.push_back(eapi_mod(v, enabled, read_values(path(
+			enabled_file).parent_path().append("/").append(c_str(v)))));
 	}
 	return mods;
 }
@@ -132,43 +119,27 @@ bool std::fexists(string &file)
 	return ifstream(file).good();
 }
 
-char *std::malloc(char *src)
-{
-	size_t len = strlen(src);
-	char *c = (char*)malloc(len);
-	memcpy(c, src, len + 1);
-	return c;
-}
-
-uint8_t *std::malloc(uint8_t *src, size_t len)
-{
-	uint8_t *c = (uint8_t*)malloc(len);
-	memcpy(c, src, len);
-	return c;
-}
-
 eapi_info eapi::parse_eapi()
 {
-	string eapi_root = string(dot_minecraft_path).append("/cxclient_eapi");
-	string mods_root = string(eapi_root).append("/mods");
-	string enabled_file = string(mods_root).append("/enabled");
-	string running_file = string(eapi_root).append("/running");
-	return eapi_info(fexists(running_file), read_mods(enabled_file));
+	return eapi_info
+	(
+		fexists(string(mc_path).append("/cxclient_eapi/running")),
+		read_mods(string(mc_path).append("/cxclient_eapi/mods/enabled"))
+	);
 }
 
-void cxclient::add_addon(string &path)
+void cxclient::add_addon(string &file)
 {
-	fcpy(path, string(dot_minecraft_path).append("/cxclient_addons")
-		.append(path.substr(max<size_t>(path.find_last_of('/'),
-			path.find_last_of('\\')))));
+	fcpy(file, string(mc_path).append("/cxclient_addons")
+		.append(path(file).filename().string()));
 }
 
-int std::fcpy(string &file1, string &file2)
+_off_t std::fcpy(string &file1, string &file2)
 {
 	FILE *f1 = fopen(file1.c_str(), "r");
 	FILE *f2 = fopen(file2.c_str(), "w");
 	int c = 0;
-	int i = 0;
+	_off_t i = 0;
 	while ((c = fgetc(f1)) != EOF)
 	{
 		fputc(c, f2);
@@ -177,4 +148,21 @@ int std::fcpy(string &file1, string &file2)
 	fclose(f1);
 	fclose(f2);
 	return i;
+}
+
+_off_t std::fsize(string &file)
+{
+	return fstat(file).st_size;
+}
+
+struct stat std::fstat(string &file)
+{
+	struct stat s;
+	stat(file.c_str(), &s);
+	return s;
+}
+
+char *std::c_str(vector<uint8_t>& raw)
+{
+	return (char*)&raw[0];
 }

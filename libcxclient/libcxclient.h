@@ -10,12 +10,11 @@ namespace std
 {
 	bool fexists(string &file);
 	//Copies file1 to file2 and returns the number of written bytes.
-	int fcpy(string &file1, string &file2);
-	
-	//Mallocs the given C string (0 terminated) and returns a ptr to the heap space.
-	char *malloc(char *src);
-	//Mallocs the given byte array with the given length and returns a ptr to the heap space.
-	uint8_t *malloc(uint8_t *src, size_t len);
+	_off_t fcpy(string &file1, string &file2);
+	_off_t fsize(string &file);
+	struct stat fstat(string &file);
+
+	char *c_str(vector<uint8_t> &raw);
 
 	int16_t int16(uint8_t bytes[2]);
 	uint16_t uint16(uint8_t bytes[2]);
@@ -31,9 +30,9 @@ using namespace std::filesystem;
 namespace cxclient
 {
 #ifdef _WIN32
-	const string dot_minecraft_path = string(getenv("APPDATA")).append("\\.minecraft");
+	const string mc_path = string(getenv("APPDATA")).append("\\.minecraft");
 #else
-	const string dot_minecraft_path = string(getenv("HOME")).append("/.minecraft");
+	const string mc_path = string(getenv("HOME")).append("/.minecraft");
 #endif
 	namespace eapi
 	{
@@ -42,16 +41,16 @@ namespace cxclient
 		{
 		public:
 			//The eAPI name of the mod. (usually malloced)
-			char *name;
+			string name;
 			//False if the mod is disabled, any other value if it's enabled.
 			//(the byte written by CXClient, which is only 0 or 1 at the moment)
 			bool enabled;
 			//All the mods variables that are exported by it.
 			//Key/first is the name the mod specified. (often different from it's name in the CXClient code)
-			//Value/second are the bytes saved in the file. (usually some kind of int, ints can be resolved with std::int32, std::int16, ...)
-			map<char*, uint8_t*> *values;
+			//Value/second are the bytes saved in the file. (usually some kind of int, which can be resolved with std::int32, std::int16, ...)
+			map<string, uint8_t*> values;
 			eapi_mod();
-			eapi_mod(char *name, bool enabled, map<char*, uint8_t*> *values);
+			eapi_mod(vector<uint8_t> &raw_name, bool enabled, map<string, uint8_t*> values);
 			~eapi_mod();
 		};
 		//All the info the eAPI can give you.
@@ -62,13 +61,13 @@ namespace cxclient
 			//(it is std::fexists which is std::ifstream::good)
 			bool running;
 			//All the mods loaded by the CXClient with all their properties.
-			vector<eapi_mod*> mods;
+			vector<eapi_mod> mods;
 			//Initializes a new eapi_info.
 			//running is the default/0.
 			//mods is vector<eapi_mod*>()
 			eapi_info();
 			//Initializes a new eapi_info from the given values.
-			eapi_info(bool running, vector<eapi_mod*> mods);
+			eapi_info(bool running, vector<eapi_mod> mods);
 			//Deconstructs the given eapi_info.
 			//Also deletes all eapi_mods in the mods variable.
 			//All malloced RAM is freed by this.
