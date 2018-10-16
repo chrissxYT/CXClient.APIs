@@ -1,19 +1,21 @@
 #pragma once
 
-#include <string>
 #include <map>
-#include <vector>
 #include <filesystem>
 #include <fstream>
 
 namespace std
 {
+	//0 if file doesn't exist, anything else if it does
 	bool fexists(string &file);
 	//Copies file1 to file2 and returns the number of written bytes.
 	_off_t fcpy(string &file1, string &file2);
+	//returns the size of the file in bytes
 	_off_t fsize(string &file);
+	//calls stat on the file and returns the whole struct
 	struct stat fstat(string &file);
 
+	//converts uint8 vector to char array
 	char *c_str(vector<uint8_t> &raw);
 
 	int16_t int16(uint8_t bytes[2]);
@@ -61,13 +63,13 @@ namespace cxclient
 			//(it is std::fexists which is std::ifstream::good)
 			bool running;
 			//All the mods loaded by the CXClient with all their properties.
-			vector<eapi_mod> mods;
+			std::vector<eapi_mod> mods;
 			//Initializes a new eapi_info.
 			//running is the default/0.
 			//mods is vector<eapi_mod*>()
 			eapi_info();
 			//Initializes a new eapi_info from the given values.
-			eapi_info(bool running, vector<eapi_mod> mods);
+			eapi_info(bool running, std::vector<eapi_mod> mods);
 			//Deconstructs the given eapi_info.
 			//Also deletes all eapi_mods in the mods variable.
 			//All malloced RAM is freed by this.

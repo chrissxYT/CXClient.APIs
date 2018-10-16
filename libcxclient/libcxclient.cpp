@@ -60,11 +60,11 @@ eapi_info::~eapi_info()
 	}
 }
 
-vector<vector<uint8_t>> split(uint8_t *arr, uint64_t len, uint8_t separator)
+vector<vector<uint8_t>> split(uint8_t *arr, _off_t len, uint8_t separator)
 {
 	vector<vector<uint8_t>> a;
 	vector<uint8_t> b;
-	for (uint64_t i = 0; i < len; i++)
+	for (_off_t i = 0; i < len; i++)
 	{
 		if (arr[i] == separator)
 		{
