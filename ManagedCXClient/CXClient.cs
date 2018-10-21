@@ -211,7 +211,8 @@ namespace ManagedCXClient
 
         /// <summary>
         /// Tries to get the value as a sbyte by name.
-        /// Else returns first byte of HRESULT and stores the exception into <see cref="CXClient.LastException"/>
+        /// Else returns LSB of HRESULT and stores the exception
+        /// into <see cref="CXClient.LastException"/>
         /// </summary>
         /// <param name="name">The name of the value.</param>
         /// <returns>The read byte.</returns>
@@ -261,7 +262,9 @@ namespace ManagedCXClient
             try
             {
                 byte[] b = values[name];
-                return (b[0] << 56) | (b[1] << 48) | (b[2] << 40) | (b[3] << 32) | (b[4] << 24) | (b[5] << 16) | (b[6] << 8) | b[7];
+                return (b[0] << 56) | (b[1] << 48) | (b[2] << 40) |
+                    (b[3] << 32) | (b[4] << 24) | (b[5] << 16) |
+                    (b[6] << 8) | b[7];
             }
             catch (Exception e)
             {
