@@ -211,65 +211,66 @@ namespace ManagedCXClient
 
         /// <summary>
         /// Tries to get the value as a sbyte by name.
-        /// Else returns LSB of HRESULT and stores the exception
-        /// into <see cref="CXClient.LastException"/>
+        /// Else returns -1, true and stores the exception
+        /// into <see cref="CXClient.LastException"/>.
         /// </summary>
         /// <param name="name">The name of the value.</param>
-        /// <returns>The read byte.</returns>
-        public sbyte GetByte(string name)
+        /// <returns>(the read byte, false) or (-1, true)</returns>
+        public Byte GetByte(string name)
         {
             try
             {
-                return (sbyte)values[name][0];
+                return new Byte((sbyte)values[name][0], false);
             }
             catch (Exception e)
             {
                 CXClient.LastException = e;
-                return (sbyte)e.HResult;
+                return new Byte(-1, true);
             }
         }
 
-        public short GetShort(string name)
+        public Short GetShort(string name)
         {
             try
             {
                 byte[] b = values[name];
-                return (short)((b[0] << 8) | b[1]);
+                return new Short((short)((b[0] << 8) | b[1]), false);
             }
             catch (Exception e)
             {
                 CXClient.LastException = e;
-                return (short)e.HResult;
+                return new Short(-1, true);
             }
         }
 
-        public int GetInt(string name)
+        public Int GetInt(string name)
         {
             try
             {
                 byte[] b = values[name];
-                return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
+                return new Int((b[0] << 24) | (b[1] << 16)
+                    | (b[2] << 8) | b[3], false);
             }
             catch (Exception e)
             {
                 CXClient.LastException = e;
-                return e.HResult;
+                return new Int(-1, true);
             }
         }
 
-        public long GetLong(string name)
+        public Long GetLong(string name)
         {
             try
             {
                 byte[] b = values[name];
-                return (b[0] << 56) | (b[1] << 48) | (b[2] << 40) |
-                    (b[3] << 32) | (b[4] << 24) | (b[5] << 16) |
-                    (b[6] << 8) | b[7];
+                return new Long((b[0] << 56) | (b[1] << 48) |
+                    (b[2] << 40) | (b[3] << 32) | (b[4] << 24) |
+                    (b[5] << 16) | (b[6] << 8) | b[7], false);
             }
             catch (Exception e)
             {
                 CXClient.LastException = e;
-                return e.HResult;
+                return new Long(-1, true);
             }
         }
 
@@ -285,17 +286,61 @@ namespace ManagedCXClient
     public class Addon
     {
         public string path;
-	public string name;
+	    public string name;
 
-	public Addon(string path)
-	{
-		this.path = path;
-		name = Path.GetFileNameWithoutExtension(path);
-	}
+	    public Addon(string path)
+	    {
+		    this.path = path;
+		    name = Path.GetFileNameWithoutExtension(path);
+	    }
 
-	public ZipArchive Open()
-	{
-		return ZipFile.Open(path, ZipArchiveMode.Read);
-	}
+	    public ZipArchive Open()
+	    {
+	    	return ZipFile.Open(path, ZipArchiveMode.Read);
+	    }
+    }
+
+    public struct Byte
+    {
+        public sbyte val;
+        public bool err;
+        public Byte(sbyte val, bool err)
+        {
+            this.val = val;
+            this.err = err;
+        }
+    }
+
+    public struct Short
+    {
+        public short val;
+        public bool err;
+        public Short(short val, bool err)
+        {
+            this.val = val;
+            this.err = err;
+        }
+    }
+
+    public struct Int
+    {
+        public int val;
+        public bool err;
+        public Int(int val, bool err)
+        {
+            this.val = val;
+            this.err = err;
+        }
+    }
+
+    public struct Long
+    {
+        public long val;
+        public bool err;
+        public Long(long val, bool err)
+        {
+            this.val = val;
+            this.err = err;
+        }
     }
 }

@@ -176,30 +176,28 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\chrissicx\\.nuget\\packages\\": {},
-    "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
+    "/home/chrissx/.nuget/packages/": {},
+    "/usr/share/dotnet/sdk/NuGetFallbackFolder": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\workspace_VS\\CXClient.APIs\\ManagedCXClient\\ManagedCXClient.csproj",
+      "projectUniqueName": "/home/chrissx/CXClient.APIs/ManagedCXClient/ManagedCXClient.csproj",
       "projectName": "ManagedCXClient",
-      "projectPath": "D:\\workspace_VS\\CXClient.APIs\\ManagedCXClient\\ManagedCXClient.csproj",
-      "packagesPath": "C:\\Users\\chrissicx\\.nuget\\packages\\",
-      "outputPath": "D:\\workspace_VS\\CXClient.APIs\\ManagedCXClient\\obj\\",
+      "projectPath": "/home/chrissx/CXClient.APIs/ManagedCXClient/ManagedCXClient.csproj",
+      "packagesPath": "/home/chrissx/.nuget/packages/",
+      "outputPath": "/home/chrissx/CXClient.APIs/ManagedCXClient/obj/",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
-        "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        "/usr/share/dotnet/sdk/NuGetFallbackFolder"
       ],
       "configFilePaths": [
-        "C:\\Users\\chrissicx\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "/home/chrissx/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "netstandard2.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
