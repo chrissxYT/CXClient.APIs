@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using static System.IO.File;
 using static System.IO.Path;
 using static System.Text.Encoding;
@@ -65,7 +66,7 @@ namespace ManagedCXClient
             {
                 byte[] b = ReadAllBytes(EnabledModsFile);
                 List<Mod> mods = new List<Mod>();
-                byte[][] c = Split(b, 11); // 11 is VT in ASCII which is the separator in our custom format
+                byte[][] c = Split(b, 11); // 11/VT is the separator in the CXClient Enabled Format
                 foreach (byte[] d in c)
                 {
                     string s = ASCII.GetString(d, 0, d.Length - 1);
@@ -90,11 +91,16 @@ namespace ManagedCXClient
         /// <summary>
         /// The paths of all the addons.
         /// </summary>
-        public static string[] Addons
+        public static Addon[] Addons
         {
             get
             {
-                return Directory.GetFiles(AddonPath, "*.jar");
+		    List<Addon> a = new List<Addon>();
+		    foreach(string p in Directory.GetFiles(AddonPath, "*.jar"))
+		    {
+			    a.Add(new Addon(p));
+		    }
+		    return a.ToArray();
             }
         }
 
@@ -271,5 +277,22 @@ namespace ManagedCXClient
                 return values.GetEnumerator();
             }
         }
+    }
+
+    public class Addon
+    {
+        public string path;
+	public string name;
+
+	public Addon(string path)
+	{
+		this.path = path;
+		name = Path.GetFileNameWithoutExtension(path);
+	}
+
+	public ZipArchive Open()
+	{
+		return ZipFile.Open(path, ZipArchiveMode.Read);
+	}
     }
 }
