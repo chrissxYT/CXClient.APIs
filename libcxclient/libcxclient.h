@@ -1,17 +1,39 @@
 #pragma once
 
 #include <map>
-#include <filesystem>
 #include <fstream>
+
+#if defined(_WIN32) || defined(_WIN64)
+#define WIN 1
+#else
+#define WIN 0
+#endif
+
+#if WIN || defined(__CYGWIN__) || defined(__MINGW32__)
+#define WINF 1
+#else
+#define WINF 0
+#endif
+
+#if WIN
+typedef _off_t off;
+#include <filesystem>
+#else
+typedef off_t off;
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <experimental/filesystem>
+#endif
 
 namespace std
 {
 	//0 if file doesn't exist, anything else if it does
 	bool fexists(string &file);
 	//Copies file1 to file2 and returns the number of written bytes.
-	_off_t fcpy(string &file1, string &file2);
+	off fcpy(string &file1, string &file2);
 	//returns the size of the file in bytes
-	_off_t fsize(string &file);
+	off fsize(string &file);
 	//calls stat on the file and returns the whole struct
 	struct stat fstat(string &file);
 
@@ -27,58 +49,68 @@ namespace std
 }
 
 using namespace std;
+
+#if WIN
 using namespace std::filesystem;
+#else
+using namespace experimental::filesystem;
+#endif
 
 namespace cxclient
 {
-#ifdef _WIN32
-	const string mc_path = string(getenv("APPDATA")).append("\\.minecraft");
+	const std::string mc_path = string(getenv(
+#if defined(_WIN32) || defined(_WIN64) || defined(__CYGWIN__) ||\
+	defined(__MINGW32__)
+	"APPDATA"
 #else
-	const string mc_path = string(getenv("HOME")).append("/.minecraft");
+	"HOME"
 #endif
+	)).append("/.minecraft");
+
 	namespace eapi
 	{
 		//A single mod in the CXClient.
-		struct eapi_mod
+		struct mod
 		{
 		public:
 			//The eAPI name of the mod. (usually malloced)
-			string name;
+			std::string name;
 			//False if the mod is disabled, any other value if it's enabled.
 			//(the byte written by CXClient, which is only 0 or 1 at the moment)
 			bool enabled;
 			//All the mods variables that are exported by it.
 			//Key/first is the name the mod specified. (often different from it's name in the CXClient code)
 			//Value/second are the bytes saved in the file. (usually some kind of int, which can be resolved with std::int32, std::int16, ...)
-			map<string, uint8_t*> values;
-			eapi_mod();
-			eapi_mod(vector<uint8_t> &raw_name, bool enabled, map<string, uint8_t*> values);
-			~eapi_mod();
+			map<std::string, uint8_t*> values;
+			mod();
+			mod(std::vector<uint8_t> &raw_name, bool enabled, map<string, uint8_t*> values);
+			~mod();
 		};
+
 		//All the info the eAPI can give you.
-		class eapi_info
+		class info
 		{
 		public:
 			//False if no CXClient is running, any other value if it is.
 			//(it is std::fexists which is std::ifstream::good)
 			bool running;
 			//All the mods loaded by the CXClient with all their properties.
-			std::vector<eapi_mod> mods;
+			std::vector<mod> mods;
 			//Initializes a new eapi_info.
 			//running is the default/0.
 			//mods is vector<eapi_mod*>()
-			eapi_info();
+			info();
 			//Initializes a new eapi_info from the given values.
-			eapi_info(bool running, std::vector<eapi_mod> mods);
+			info(bool running, std::vector<mod> mods);
 			//Deconstructs the given eapi_info.
 			//Also deletes all eapi_mods in the mods variable.
 			//All malloced RAM is freed by this.
-			~eapi_info();
+			~info();
 		};
 		//Parses the eAPI information from the .minecraft-path.
 		//All required RAM allocations are done by malloc and new.
 		//Remember to delete the eapi_info by calling the deconstructor.
-		eapi_info parse_eapi();
+		info parse_eapi();
 	}
 	void add_addon(std::string &path);
 }

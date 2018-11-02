@@ -95,12 +95,12 @@ namespace ManagedCXClient
         {
             get
             {
-		    List<Addon> a = new List<Addon>();
-		    foreach(string p in Directory.GetFiles(AddonPath, "*.jar"))
-		    {
-			    a.Add(new Addon(p));
-		    }
-		    return a.ToArray();
+		        List<Addon> a = new List<Addon>();
+		        foreach(string p in Directory.GetFiles(AddonPath, "*.jar"))
+		        {
+			        a.Add(new Addon(p));
+		        }
+		        return a.ToArray();
             }
         }
 

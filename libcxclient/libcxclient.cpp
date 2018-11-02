@@ -27,46 +27,46 @@ uint64_t std::uint64(uint8_t b[8])
 		((uint64_t)b[3] << 32) | (b[4] << 24) | (b[5] << 16) | (b[6] << 8) | (b[7]);
 }
 
-eapi_mod::eapi_mod() {}
+mod::mod() {}
 
-eapi_mod::eapi_mod(vector<uint8_t> &raw_name, bool enabled, map<string, uint8_t*> values)
+mod::mod(vector<uint8_t> &raw_name, bool enabled, map<string, uint8_t*> values)
 {
 	this->name = string((char*)&raw_name[0]);
 	this->enabled = enabled;
 	this->values = values;
 }
 
-eapi_mod::~eapi_mod()
+mod::~mod()
 {
-	for (pair<string, uint8_t*> k : values)
+	for (pair<std::string, uint8_t*> k : values)
 	{
 		free(k.second);
 	}
 }
 
-eapi_info::eapi_info() {}
+info::info() {}
 
-eapi_info::eapi_info(bool running, vector<eapi_mod> mods)
+info::info(bool running, vector<mod> mods)
 {
 	this->running = running;
 	this->mods = mods;
 }
 
-eapi_info::~eapi_info()
+info::~info()
 {
-	for (eapi_mod m : mods)
+	for (mod m : mods)
 	{
-		m.~eapi_mod();
+		m.~mod();
 	}
 }
 
-vector<vector<uint8_t>> split(uint8_t *arr, _off_t len, uint8_t separator)
+std::vector<std::vector<uint8_t>> split(uint8_t *arr, off len, uint8_t sep)
 {
 	vector<vector<uint8_t>> a;
 	vector<uint8_t> b;
-	for (_off_t i = 0; i < len; i++)
+	for (off i = 0; i < len; i++)
 	{
-		if (arr[i] == separator)
+		if (arr[i] == sep)
 		{
 			a.push_back(b);
 			b = vector<uint8_t>();
@@ -79,7 +79,7 @@ vector<vector<uint8_t>> split(uint8_t *arr, _off_t len, uint8_t separator)
 	return a;
 }
 
-map<string, uint8_t*> read_values(path &mod_dir)
+std::map<std::string, uint8_t*> read_values(path &mod_dir)
 {
 	map<string, uint8_t*> values;
 	for (path p : directory_iterator(mod_dir))
@@ -94,11 +94,11 @@ map<string, uint8_t*> read_values(path &mod_dir)
 	return values;
 }
 
-vector<eapi_mod> read_mods(string &enabled_file)
+vector<mod> read_mods(std::string &enabled_file)
 {
-	vector<eapi_mod> mods;
-	ifstream s(enabled_file, ios::binary);
+	std::vector<mod> mods;
 	streampos len = fsize(enabled_file);
+	ifstream s(enabled_file, ios::binary);
 	uint8_t *bytes = (uint8_t*)malloc(len);
 	s.read((char*)bytes, len);
 	vector<vector<uint8_t>> splt = split(bytes, len, 11);
@@ -108,38 +108,38 @@ vector<eapi_mod> read_mods(string &enabled_file)
 		size_t last_idx = v.size() - 1;
 		bool enabled = v[last_idx];
 		v[last_idx] = 0;
-		mods.push_back(eapi_mod(v, enabled, read_values(path(
+		mods.push_back(mod(v, enabled, read_values(path(
 			enabled_file).parent_path().append("/").append(c_str(v)))));
 	}
 	return mods;
 }
 
-bool std::fexists(string &file)
+bool std::fexists(std::string &file)
 {
 	return ifstream(file).good();
 }
 
-eapi_info eapi::parse_eapi()
+info eapi::parse_eapi()
 {
-	return eapi_info
+	return info
 	(
 		fexists(string(mc_path).append("/cxclient_eapi/running")),
 		read_mods(string(mc_path).append("/cxclient_eapi/mods/enabled"))
 	);
 }
 
-void cxclient::add_addon(string &file)
+void cxclient::add_addon(std::string &file)
 {
 	fcpy(file, string(mc_path).append("/cxclient_addons")
 		.append(path(file).filename().string()));
 }
 
-_off_t std::fcpy(string &file1, string &file2)
+off std::fcpy(string &file1, string &file2)
 {
 	FILE *f1 = fopen(file1.c_str(), "r");
 	FILE *f2 = fopen(file2.c_str(), "w");
 	int c = 0;
-	_off_t i = 0;
+	off i = 0;
 	while ((c = fgetc(f1)) != EOF)
 	{
 		fputc(c, f2);
@@ -150,19 +150,19 @@ _off_t std::fcpy(string &file1, string &file2)
 	return i;
 }
 
-_off_t std::fsize(string &file)
+off std::fsize(string &file)
 {
 	return fstat(file).st_size;
 }
 
-struct stat std::fstat(string &file)
+struct stat std::fstat(std::string &file)
 {
 	struct stat s;
 	stat(file.c_str(), &s);
 	return s;
 }
 
-char *std::c_str(vector<uint8_t>& raw)
+char *std::c_str(std::vector<uint8_t>& raw)
 {
 	return (char*)&raw[0];
 }
