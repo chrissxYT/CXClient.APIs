@@ -1,2 +1,3 @@
 ﻿  libcxclient.cpp
+d:\workspace_vs\cxclient.apis\libcxclient\libcxclient.cpp(105): warning C4244: "Argument": Konvertierung von "std::streamoff" in "off", möglicher Datenverlust
   libcxclient.vcxproj -> D:\workspace_VS\CXClient.APIs\x64\Debug\libcxclient.dll

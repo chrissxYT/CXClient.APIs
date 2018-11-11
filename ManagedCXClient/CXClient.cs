@@ -80,9 +80,9 @@ namespace ManagedCXClient
                     }
                     i = b.Count - 1;
                     bool enabled = b[i] != 0;
-                    b.RemoveAt(i);
-                    Mod m = new Mod(ASCII.GetString(b.ToArray()), enabled);
-                    string t = ModsPath + "\\" + m.name;
+                    string name = ASCII.GetString(b.ToArray(), 0, i);
+                    Mod m = new Mod(name, enabled);
+                    string t = ModsPath + "\\" + name;
                     if (Directory.Exists(t))
                     {
                         foreach (string u in Directory.GetFiles(t))
@@ -106,56 +106,40 @@ namespace ManagedCXClient
         {
             get
             {
-		        List<Addon> a = new List<Addon>();
-		        foreach(string p in Directory.GetFiles(AddonPath, "*.jar"))
-		        {
-			        a.Add(new Addon(p));
-		        }
-		        return a.ToArray();
+                try
+                {
+                    List<Addon> a = new List<Addon>();
+                    foreach (string p in Directory.GetFiles(AddonPath, "*.jar"))
+                    {
+                        a.Add(new Addon(p));
+                    }
+                    return a.ToArray();
+                }
+                catch (Exception e)
+                {
+                    LastException = e;
+                    return null;
+                }
             }
         }
 
         /// <summary>
         /// Tries to add an addon to the addon path.
+        /// If an error occures, it is sent to LastException.
         /// </summary>
         /// <param name="file">The addon file.</param>
-        /// <returns>The error code if one occured, else 0.</returns>
-        public static int AddAddon(string file)
+        /// <returns>The true if an error occured, else false.</returns>
+        public static bool AddAddon(string file)
         {
             try
             {
                 Copy(file, Combine(AddonPath, GetFileName(file)));
-                return 0;
+                return false;
             }
             catch (Exception e)
             {
                 LastException = e;
-                return e.HResult;
-            }
-        }
-
-        static byte[][] Split(byte[] bytes)
-        {
-            try
-            {
-                List<byte> current = new List<byte>();
-                List<byte[]> split = new List<byte[]>();
-                foreach (byte b in bytes)
-                {
-                    if (b == 11)
-                    {
-                        split.Add(current.ToArray());
-                        current = new List<byte>();
-                    }
-                    else
-                        current.Add(b);
-                }
-                return split.ToArray();
-            }
-            catch (Exception e)
-            {
-                LastException = e;
-                return null;
+                return true;
             }
         }
     }

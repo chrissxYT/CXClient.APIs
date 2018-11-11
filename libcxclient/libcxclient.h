@@ -4,22 +4,22 @@
 #include <fstream>
 
 #if defined(_WIN32) || defined(_WIN64)
-#define WIN 1
+#define WIN 1 //running on windows
 #else
-#define WIN 0
+#define WIN 0 //not running on windows
 #endif
 
 #if WIN || defined(__CYGWIN__) || defined(__MINGW32__)
-#define WINF 1
+#define WINF 1 //running on windows filesystem
 #else
-#define WINF 0
+#define WINF 0 //not running on windows filesystem
 #endif
 
+typedef off_t off;
+
 #if WIN
-typedef _off_t off;
 #include <filesystem>
 #else
-typedef off_t off;
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -58,7 +58,7 @@ using namespace experimental::filesystem;
 
 namespace cxclient
 {
-	const std::string mc_path = string(getenv(
+	const std::string mc_path = std::string(getenv(
 #if defined(_WIN32) || defined(_WIN64) || defined(__CYGWIN__) ||\
 	defined(__MINGW32__)
 	"APPDATA"
@@ -81,9 +81,10 @@ namespace cxclient
 			//All the mods variables that are exported by it.
 			//Key/first is the name the mod specified. (often different from it's name in the CXClient code)
 			//Value/second are the bytes saved in the file. (usually some kind of int, which can be resolved with std::int32, std::int16, ...)
-			map<std::string, uint8_t*> values;
+			std::map<std::string, uint8_t*> values;
 			mod();
-			mod(std::vector<uint8_t> &raw_name, bool enabled, map<string, uint8_t*> values);
+			mod(std::vector<uint8_t> &raw_name, bool enabled,
+				std::map<std::string, uint8_t*> values);
 			~mod();
 		};
 

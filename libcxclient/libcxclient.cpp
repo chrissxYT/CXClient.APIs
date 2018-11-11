@@ -29,16 +29,17 @@ uint64_t std::uint64(uint8_t b[8])
 
 mod::mod() {}
 
-mod::mod(vector<uint8_t> &raw_name, bool enabled, map<string, uint8_t*> values)
+mod::mod(std::vector<uint8_t> &raw_name, bool enabled,
+	std::map<std::string, uint8_t*> values)
 {
-	this->name = string((char*)&raw_name[0]);
+	this->name = std::string((char*)&raw_name[0]);
 	this->enabled = enabled;
 	this->values = values;
 }
 
 mod::~mod()
 {
-	for (pair<std::string, uint8_t*> k : values)
+	for (std::pair<std::string, uint8_t*> k : values)
 	{
 		free(k.second);
 	}
@@ -46,7 +47,7 @@ mod::~mod()
 
 info::info() {}
 
-info::info(bool running, vector<mod> mods)
+info::info(bool running, std::vector<mod> mods)
 {
 	this->running = running;
 	this->mods = mods;
@@ -62,14 +63,14 @@ info::~info()
 
 std::vector<std::vector<uint8_t>> split(uint8_t *arr, off len, uint8_t sep)
 {
-	vector<vector<uint8_t>> a;
-	vector<uint8_t> b;
+	std::vector<std::vector<uint8_t>> a;
+	std::vector<uint8_t> b;
 	for (off i = 0; i < len; i++)
 	{
 		if (arr[i] == sep)
 		{
 			a.push_back(b);
-			b = vector<uint8_t>();
+			b = std::vector<uint8_t>();
 		}
 		else
 		{
@@ -81,12 +82,12 @@ std::vector<std::vector<uint8_t>> split(uint8_t *arr, off len, uint8_t sep)
 
 std::map<std::string, uint8_t*> read_values(path &mod_dir)
 {
-	map<string, uint8_t*> values;
+	std::map<std::string, uint8_t*> values;
 	for (path p : directory_iterator(mod_dir))
 	{
-		string str = p.string();
-		ifstream s(str, ios::binary);
-		streampos l = fsize(str);
+		std::string str = p.string();
+		std::ifstream s(str, std::ios::binary);
+		std::streampos l = fsize(str);
 		uint8_t *bfr = (uint8_t*)malloc(l);
 		s.read((char*)bfr, l);
 		values[p.filename().string()] = bfr;
@@ -94,22 +95,22 @@ std::map<std::string, uint8_t*> read_values(path &mod_dir)
 	return values;
 }
 
-vector<mod> read_mods(std::string &enabled_file)
+std::vector<mod> read_mods(std::string &enabled_file)
 {
 	std::vector<mod> mods;
-	streampos len = fsize(enabled_file);
-	ifstream s(enabled_file, ios::binary);
+	std::streampos len = fsize(enabled_file);
+	std::ifstream s(enabled_file, std::ios::binary);
 	uint8_t *bytes = (uint8_t*)malloc(len);
 	s.read((char*)bytes, len);
-	vector<vector<uint8_t>> splt = split(bytes, len, 11);
+	std::vector<std::vector<uint8_t>> splt = split(bytes, len, 11);
 	free(bytes);
-	for (vector<uint8_t> v : splt)
+	for (std::vector<uint8_t> v : splt)
 	{
 		size_t last_idx = v.size() - 1;
 		bool enabled = v[last_idx];
 		v[last_idx] = 0;
 		mods.push_back(mod(v, enabled, read_values(path(
-			enabled_file).parent_path().append("/").append(c_str(v)))));
+			enabled_file).parent_path().append("/").append(std::c_str(v)))));
 	}
 	return mods;
 }
@@ -123,14 +124,14 @@ info eapi::parse_eapi()
 {
 	return info
 	(
-		fexists(string(mc_path).append("/cxclient_eapi/running")),
-		read_mods(string(mc_path).append("/cxclient_eapi/mods/enabled"))
+		std::fexists(std::string(mc_path).append("/cxclient_eapi/running")),
+		read_mods(std::string(mc_path).append("/cxclient_eapi/mods/enabled"))
 	);
 }
 
 void cxclient::add_addon(std::string &file)
 {
-	fcpy(file, string(mc_path).append("/cxclient_addons")
+	fcpy(file, std::string(mc_path).append("/cxclient_addons")
 		.append(path(file).filename().string()));
 }
 
