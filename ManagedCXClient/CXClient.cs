@@ -24,12 +24,14 @@ namespace ManagedCXClient
         static string RunningFile { get; } = "%appdata%\\.minecraft\\cxclient_eapi\\running";
         
         /// <summary>
-        /// Usually the last exception thrown by any failed function in ManagedCXClient. (can be set manually, but DO NOT do that)
+        /// Usually the last exception thrown by any failed function in ManagedCXClient.
+        /// (can be set manually, but DO NOT do that)
         /// </summary>
         public static Exception LastException { get; set; } = null;
 
         /// <summary>
-        /// Get/set if the InAppUserInterface is disabled. (true means the IAUI is disabled, false means it's enabled)
+        /// Get/set if the InAppUserInterface is disabled.
+        /// (true means the IAUI is disabled, false means it's enabled)
         /// </summary>
         public static bool IauiDisabled
         {
@@ -62,17 +64,25 @@ namespace ManagedCXClient
         /// </summary>
         public static Mod[] Mods
         {
+            //basically a parser for the enabled format
             get
             {
-                byte[] b = ReadAllBytes(EnabledModsFile);
+                FileStream s = Open(EnabledModsFile, FileMode.Open, FileAccess.Read);
                 List<Mod> mods = new List<Mod>();
-                byte[][] c = Split(b, 11); // 11/VT is the separator in the CXClient Enabled Format
-                foreach (byte[] d in c)
+                int i;
+                List<byte> b = new List<byte>();
+                while ((i = s.ReadByte()) != -1)
                 {
-                    string s = ASCII.GetString(d, 0, d.Length - 1);
-                    bool e = d[d.Length - 1] != 0;
-                    Mod m = new Mod(s, e);
-                    string t = ModsPath + "\\" + s;
+                    b.Add((byte)i);
+                    while ((i = s.ReadByte()) != 11)
+                    {
+                        b.Add((byte)i);
+                    }
+                    i = b.Count - 1;
+                    bool enabled = b[i] != 0;
+                    b.RemoveAt(i);
+                    Mod m = new Mod(ASCII.GetString(b.ToArray()), enabled);
+                    string t = ModsPath + "\\" + m.name;
                     if (Directory.Exists(t))
                     {
                         foreach (string u in Directory.GetFiles(t))
@@ -83,6 +93,7 @@ namespace ManagedCXClient
                         }
                     }
                     mods.Add(m);
+                    b.Clear();
                 }
                 return mods.ToArray();
             }
@@ -123,7 +134,7 @@ namespace ManagedCXClient
             }
         }
 
-        static byte[][] Split(byte[] bytes, byte separator)
+        static byte[][] Split(byte[] bytes)
         {
             try
             {
@@ -131,7 +142,7 @@ namespace ManagedCXClient
                 List<byte[]> split = new List<byte[]>();
                 foreach (byte b in bytes)
                 {
-                    if (b == separator)
+                    if (b == 11)
                     {
                         split.Add(current.ToArray());
                         current = new List<byte>();
@@ -146,201 +157,6 @@ namespace ManagedCXClient
                 LastException = e;
                 return null;
             }
-        }
-    }
-
-    /// <summary>
-    /// One of the mods of CXClient.
-    /// </summary>
-    public class Mod
-    {
-        /// <summary>
-        /// The name of this mod.
-        /// </summary>
-        public string name;
-        /// <summary>
-        /// If this mod is enabled.
-        /// </summary>
-        public bool enabled;
-        /// <summary>
-        /// The values saved in the mod's eAPI dir.
-        /// </summary>
-        Dictionary<string, byte[]> values;
-
-        /// <summary>
-        /// Constructs a new mod with the specified name, enabled flag and an empty value table.
-        /// </summary>
-        /// <param name="name">The name of the mod.</param>
-        /// <param name="enabled">If the mod is enabled.</param>
-        public Mod(string name, bool enabled)
-        {
-            this.name = name;
-            this.enabled = enabled;
-            values = new Dictionary<string, byte[]>();
-        }
-
-        /// <summary>
-        /// Adds a read value to the mod.
-        /// </summary>
-        /// <param name="name">The name of the value.</param>
-        /// <param name="value">The value.</param>
-        /// <returns>0 if the operation succeeded, else the HRESULT.</returns>
-        public int AddValue(string name, byte[] value)
-        {
-            try
-            {
-                values.Add(name, value);
-                return 0;
-            }
-            catch (Exception e)
-            {
-                CXClient.LastException = e;
-                return e.HResult;
-            }
-        }
-
-        /// <summary>
-        /// Gets the raw bytes of a value.
-        /// </summary>
-        /// <param name="name">The name of the value.</param>
-        /// <returns>The value bytes.</returns>
-        public byte[] GetRawValue(string name)
-        {
-            return values[name];
-        }
-
-        /// <summary>
-        /// Tries to get the value as a sbyte by name.
-        /// Else returns -1, true and stores the exception
-        /// into <see cref="CXClient.LastException"/>.
-        /// </summary>
-        /// <param name="name">The name of the value.</param>
-        /// <returns>(the read byte, false) or (-1, true)</returns>
-        public Byte GetByte(string name)
-        {
-            try
-            {
-                return new Byte((sbyte)values[name][0], false);
-            }
-            catch (Exception e)
-            {
-                CXClient.LastException = e;
-                return new Byte(-1, true);
-            }
-        }
-
-        public Short GetShort(string name)
-        {
-            try
-            {
-                byte[] b = values[name];
-                return new Short((short)((b[0] << 8) | b[1]), false);
-            }
-            catch (Exception e)
-            {
-                CXClient.LastException = e;
-                return new Short(-1, true);
-            }
-        }
-
-        public Int GetInt(string name)
-        {
-            try
-            {
-                byte[] b = values[name];
-                return new Int((b[0] << 24) | (b[1] << 16)
-                    | (b[2] << 8) | b[3], false);
-            }
-            catch (Exception e)
-            {
-                CXClient.LastException = e;
-                return new Int(-1, true);
-            }
-        }
-
-        public Long GetLong(string name)
-        {
-            try
-            {
-                byte[] b = values[name];
-                return new Long((b[0] << 56) | (b[1] << 48) |
-                    (b[2] << 40) | (b[3] << 32) | (b[4] << 24) |
-                    (b[5] << 16) | (b[6] << 8) | b[7], false);
-            }
-            catch (Exception e)
-            {
-                CXClient.LastException = e;
-                return new Long(-1, true);
-            }
-        }
-
-        public Dictionary<string, byte[]>.Enumerator Values
-        {
-            get
-            {
-                return values.GetEnumerator();
-            }
-        }
-    }
-
-    public class Addon
-    {
-        public string path;
-	    public string name;
-
-	    public Addon(string path)
-	    {
-		    this.path = path;
-		    name = Path.GetFileNameWithoutExtension(path);
-	    }
-
-	    public ZipArchive Open()
-	    {
-	    	return ZipFile.Open(path, ZipArchiveMode.Read);
-	    }
-    }
-
-    public struct Byte
-    {
-        public sbyte val;
-        public bool err;
-        public Byte(sbyte val, bool err)
-        {
-            this.val = val;
-            this.err = err;
-        }
-    }
-
-    public struct Short
-    {
-        public short val;
-        public bool err;
-        public Short(short val, bool err)
-        {
-            this.val = val;
-            this.err = err;
-        }
-    }
-
-    public struct Int
-    {
-        public int val;
-        public bool err;
-        public Int(int val, bool err)
-        {
-            this.val = val;
-            this.err = err;
-        }
-    }
-
-    public struct Long
-    {
-        public long val;
-        public bool err;
-        public Long(long val, bool err)
-        {
-            this.val = val;
-            this.err = err;
         }
     }
 }
